@@ -33,35 +33,6 @@
           ]
         }
       }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:424268954678:android:a19fc02a21ee14bce1ac97",
-        "android_client_info": {
-          "package_name": "com.tumex.tumex_for_doctors"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "424268954678-1pl47fg93fq1e6k36mb8crlvot0ig7dk.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDfGlCl5egfwUZrI_e4zSQyotFPvn-iREA"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "424268954678-1pl47fg93fq1e6k36mb8crlvot0ig7dk.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
     }
   ],
   "configuration_version": "1"

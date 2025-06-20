@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:tumex_users_app/features/auth/services/auth_service.dart';
+import 'package:tumex_users_app/features/profile/services/profile_service.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:tumex_users_app/features/profile/models/user_model.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -12,350 +16,300 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _phoneController;
+
   bool _isEditing = false;
   bool _isLoading = false;
+  File? _imageFile;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _nameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _phoneController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _lastNameController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
 
-  void _loadUserData() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _nameController.text = user.displayName ?? '';
-      // TODO: Load phone number from Firestore
-      _phoneController.text = '';
+  void _loadUserData(UserModel user) {
+    _nameController.text = user.displayName ?? '';
+    _lastNameController.text = user.lastName ?? '';
+    _phoneController.text = user.phoneNumber ?? '';
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
     }
   }
 
   Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          await user.updateDisplayName(_nameController.text.trim());
-          // TODO: Save additional profile data to Firestore
+    setState(() => _isLoading = true);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Perfil actualizado exitosamente')),
-          );
+    try {
+      final user = ref.read(firebaseAuthProvider).currentUser;
+      if (user == null) throw Exception('No authenticated user found.');
 
-          setState(() {
-            _isEditing = false;
-          });
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al actualizar perfil: $e')),
+      String? photoUrl;
+      // 1. Upload new image if selected
+      if (_imageFile != null) {
+        final storageRef = FirebaseStorage.instance.ref().child(
+          'users/${user.uid}/profile_image.jpg',
         );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
+        final uploadTask = storageRef.putFile(_imageFile!);
+        final snapshot = await uploadTask.whenComplete(() {});
+        photoUrl = await snapshot.ref.getDownloadURL();
       }
+
+      // 2. Prepare data for Firestore
+      final dataToUpdate = {
+        'display_name': _nameController.text.trim(),
+        'last_name': _lastNameController.text.trim(),
+        'phone_number': _phoneController.text.trim(),
+        if (photoUrl != null) 'photo_url': photoUrl,
+      };
+
+      // 3. Update Firestore
+      await ref
+          .read(profileServiceProvider)
+          .updateUserData(user.uid, dataToUpdate);
+
+      // 4. Update Firebase Auth profile
+      if (photoUrl != null) await user.updatePhotoURL(photoUrl);
+      await user.updateDisplayName(_nameController.text.trim());
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Perfil actualizado exitosamente')),
+      );
+
+      setState(() => _isEditing = false);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al actualizar perfil: $e')));
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(firebaseAuthProvider).currentUser;
-    final textTheme = Theme.of(context).textTheme;
-
-    if (user == null) {
+    final authUser = ref.watch(firebaseAuthProvider).currentUser;
+    if (authUser == null) {
       return const Scaffold(
         body: Center(child: Text('Usuario no autenticado')),
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mi Perfil'),
-        actions: [
-          if (!_isEditing)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                setState(() {
-                  _isEditing = true;
-                });
-              },
+    final userState = ref.watch(userProvider(authUser.uid));
+
+    return userState.when(
+      data: (userModel) {
+        if (userModel == null) {
+          return const Scaffold(
+            body: Center(
+              child: Text('No se pudieron cargar los datos del perfil.'),
             ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Profile Picture
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: Theme.of(
-                  context,
-                ).primaryColor.withOpacity(0.1),
-                child:
-                    user.photoURL != null
-                        ? ClipOval(
-                          child: Image.network(
-                            user.photoURL!,
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.person,
-                                size: 50,
-                                color: Theme.of(context).primaryColor,
-                              );
-                            },
-                          ),
-                        )
-                        : Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Theme.of(context).primaryColor,
-                        ),
-              ),
-              const SizedBox(height: 16),
+          );
+        }
 
-              // Change Photo Button
+        // Load data into controllers only once when the view is built or editing is cancelled.
+        if (!_isEditing) {
+          _loadUserData(userModel);
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Mi Perfil'),
+            actions: [
               if (_isEditing)
-                TextButton.icon(
-                  onPressed: () {
-                    // TODO: Implement photo upload
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Función de cambio de foto próximamente'),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text('Cambiar foto'),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => setState(() => _isEditing = false),
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => setState(() => _isEditing = true),
                 ),
-
-              const SizedBox(height: 24),
-
-              // Email (Read-only)
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.email),
-                  title: const Text('Correo Electrónico'),
-                  subtitle: Text(user.email ?? 'No disponible'),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Name Field
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.person),
-                  title:
-                      _isEditing
-                          ? TextFormField(
-                            controller: _nameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Nombre completo',
-                              border: InputBorder.none,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Por favor, ingresa tu nombre';
-                              }
-                              return null;
-                            },
-                          )
-                          : Text('Nombre completo'),
-                  subtitle:
-                      _isEditing
-                          ? null
-                          : Text(user.displayName ?? 'No especificado'),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Phone Field
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.phone),
-                  title:
-                      _isEditing
-                          ? TextFormField(
-                            controller: _phoneController,
-                            decoration: const InputDecoration(
-                              labelText: 'Teléfono',
-                              border: InputBorder.none,
-                            ),
-                            keyboardType: TextInputType.phone,
-                          )
-                          : const Text('Teléfono'),
-                  subtitle:
-                      _isEditing
-                          ? null
-                          : Text(
-                            _phoneController.text.isEmpty
-                                ? 'No especificado'
-                                : _phoneController.text,
-                          ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Action Buttons
-              if (_isEditing) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed:
-                            _isLoading
-                                ? null
-                                : () {
-                                  setState(() {
-                                    _isEditing = false;
-                                    _loadUserData(); // Reset to original values
-                                  });
-                                },
-                        child: const Text('Cancelar'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _saveProfile,
-                        child:
-                            _isLoading
-                                ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                : const Text('Guardar'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-
-              const SizedBox(height: 32),
-
-              // Settings Section
-              Card(
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.settings),
-                      title: const Text('Configuración'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // TODO: Navigate to settings screen
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Pantalla de configuración próximamente',
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.help),
-                      title: const Text('Ayuda y Soporte'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // TODO: Navigate to help screen
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Pantalla de ayuda próximamente'),
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.info),
-                      title: const Text('Acerca de'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // TODO: Navigate to about screen
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Pantalla de información próximamente',
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Sign Out Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final shouldSignOut = await showDialog<bool>(
-                      context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            title: const Text('Cerrar Sesión'),
-                            content: const Text(
-                              '¿Estás seguro de que quieres cerrar sesión?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed:
-                                    () => Navigator.of(context).pop(false),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed:
-                                    () => Navigator.of(context).pop(true),
-                                child: const Text('Cerrar Sesión'),
-                              ),
-                            ],
-                          ),
-                    );
-
-                    if (shouldSignOut == true) {
-                      await ref.read(authServiceProvider).signOut();
-                    }
-                  },
-                  icon: const Icon(Icons.logout),
-                  label: const Text('Cerrar Sesión'),
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                ),
-              ),
             ],
           ),
-        ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Profile Picture
+                  GestureDetector(
+                    onTap: _isEditing ? _pickImage : null,
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.1),
+                          backgroundImage:
+                              _imageFile != null
+                                  ? FileImage(_imageFile!)
+                                  : (userModel.photoUrl != null &&
+                                              userModel.photoUrl!.isNotEmpty
+                                          ? NetworkImage(userModel.photoUrl!)
+                                          : null)
+                                      as ImageProvider?,
+                          child:
+                              _imageFile == null &&
+                                      (userModel.photoUrl == null ||
+                                          userModel.photoUrl!.isEmpty)
+                                  ? Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: Theme.of(context).primaryColor,
+                                  )
+                                  : null,
+                        ),
+                        if (_isEditing)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: CircleAvatar(
+                              radius: 18,
+                              backgroundColor: Theme.of(context).primaryColor,
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ID and Email (Read-only)
+                  _buildInfoCard(
+                    context,
+                    'ID de Usuario',
+                    userModel.customId,
+                    Icons.badge,
+                  ),
+                  _buildInfoCard(
+                    context,
+                    'Correo Electrónico',
+                    userModel.email ?? '',
+                    Icons.email,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Editable Fields
+                  _buildEditableTextField(
+                    controller: _nameController,
+                    label: 'Nombre(s)',
+                    icon: Icons.person,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildEditableTextField(
+                    controller: _lastNameController,
+                    label: 'Apellidos',
+                    icon: Icons.person_outline,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildEditableTextField(
+                    controller: _phoneController,
+                    label: 'Teléfono',
+                    icon: Icons.phone,
+                    keyboardType: TextInputType.phone,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  if (_isEditing)
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const Text('Guardar Cambios'),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      loading:
+          () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error:
+          (error, stack) =>
+              Scaffold(body: Center(child: Text('Error: $error'))),
+    );
+  }
+
+  Widget _buildInfoCard(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+  ) {
+    return Card(
+      child: ListTile(
+        leading: Icon(icon, color: Theme.of(context).primaryColor),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(subtitle),
       ),
+    );
+  }
+
+  Widget _buildEditableTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+  }) {
+    return TextFormField(
+      controller: controller,
+      enabled: _isEditing,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: const OutlineInputBorder(),
+        filled: !_isEditing,
+        fillColor: Theme.of(context).disabledColor.withOpacity(0.05),
+      ),
+      keyboardType: keyboardType,
+      validator: (value) {
+        if (label.contains('Nombre') || label.contains('Apellidos')) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Este campo no puede estar vacío';
+          }
+        }
+        return null;
+      },
     );
   }
 }

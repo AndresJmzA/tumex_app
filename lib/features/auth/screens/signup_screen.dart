@@ -15,13 +15,17 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -31,7 +35,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         _isLoading = true;
       });
       try {
-        await ref.read(authServiceProvider).createUserWithEmailAndPassword(
+        await ref
+            .read(authServiceProvider)
+            .createUserWithEmailAndPassword(
               fullName: _nameController.text.trim(),
               email: _emailController.text.trim(),
               password: _passwordController.text.trim(),
@@ -45,9 +51,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           SnackBar(content: Text(e.message ?? 'Fallo al crear la cuenta.')),
         );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       } finally {
         if (mounted) {
           setState(() {
@@ -94,7 +100,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 // Full Name Field
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Nombre Completo'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre Completo',
+                  ),
                   keyboardType: TextInputType.name,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -108,7 +116,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 // Email Field
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Correo Electrónico'),
+                  decoration: const InputDecoration(
+                    labelText: 'Correo Electrónico',
+                  ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -125,8 +135,22 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Contraseña'),
-                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: !_isPasswordVisible,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Por favor, ingresa tu contraseña';
@@ -137,21 +161,54 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 16),
+
+                // Confirm Password Field
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  decoration: InputDecoration(
+                    labelText: 'Confirmar Contraseña',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isConfirmPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: !_isConfirmPasswordVisible,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, confirma tu contraseña';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Las contraseñas no coinciden';
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 32),
 
                 // Sign Up Button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signUp,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Crear Cuenta'),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Text('Crear Cuenta'),
                 ),
                 const SizedBox(height: 24),
 
@@ -159,10 +216,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      '¿Ya tienes una cuenta?',
-                      style: textTheme.bodyMedium,
-                    ),
+                    Text('¿Ya tienes una cuenta?', style: textTheme.bodyMedium),
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -178,4 +232,4 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       ),
     );
   }
-} 
+}

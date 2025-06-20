@@ -26,17 +26,24 @@
 
 ## Module 2: User Profile & Settings 🔄 IN PROGRESS
 
-### Phase 1: User Profile Management 🔄
-- [x] Create User Profile Screen (`lib/features/profile/screens/profile_screen.dart`)
-- [x] Implement profile editing functionality
-- [ ] Add profile picture upload capability
-- [ ] Create settings screen for app preferences
+### Phase 1: Firestore Integration for User Data
+- [ ] Create a `UserModel` class (`lib/features/profile/models/user_model.dart`) to represent the user data structure from Firestore.
+- [ ] Create a `ProfileService` (`lib/features/profile/services/profile_service.dart`) to handle all Firestore operations for user documents.
+- [ ] Implement a function to generate the custom user ID (`use` + `YY` + `######`).
+- [ ] Modify `AuthenticationService` to create a user document in Firestore upon successful registration, including all required fields (`uid`, `email`, `access_level`, `created_time`, custom ID, etc.).
+- [ ] Update `ProfileScreen` to fetch user data from Firestore instead of only Firebase Auth.
+- [ ] Implement the "Save Profile" logic to update the user document in Firestore, making sure to update `edited_time`.
 
-### Phase 2: Data Management
-- [ ] Set up Firestore database structure for user profiles
-- [ ] Create user data models
-- [ ] Implement CRUD operations for user data
-- [ ] Add data validation and error handling
+### Phase 2: Profile Picture Management
+- [ ] Add `image_picker` dependency to `pubspec.yaml`.
+- [ ] Implement logic to pick an image from the device's gallery.
+- [ ] Create a function in `ProfileService` to upload the selected image to Firebase Storage under a path like `users/{uid}/profile_image.jpg`.
+- [ ] After uploading, get the download URL and update both the `photo_url` in the user's Firestore document and the user's profile in Firebase Auth.
+
+### Phase 3: UI and Final Touches
+- [ ] Ensure `ProfileScreen` displays all data from the Firestore document correctly (phone number, last name, etc.).
+- [ ] Ensure the UI correctly handles loading states and errors during data fetching and saving.
+- [ ] Create the settings screen for app preferences.
 
 ## Module 3: Core App Features
 
@@ -54,5 +61,5 @@
 
 ## Current Status
 ✅ **Authentication Module Complete**: All login, signup, and password recovery features are working
-🔄 **Profile Module In Progress**: Profile screen created with editing functionality
-🔄 **Next Step**: Complete profile picture upload and Firestore integration
+🔄 **Profile Module In Progress**: Initial UI for the profile screen is created
+🔄 **Next Step**: Integrate Firestore for complete user data management as per the new plan
