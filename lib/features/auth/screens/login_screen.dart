@@ -17,6 +17,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -31,19 +32,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _isLoading = true;
       });
       try {
-        await ref.read(authServiceProvider).signInWithEmailAndPassword(
+        await ref
+            .read(authServiceProvider)
+            .signInWithEmailAndPassword(
               email: _emailController.text.trim(),
               password: _passwordController.text.trim(),
             );
         // Navigation will be handled by the AuthGate/AuthState listener
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Fallo al iniciar sesión.')),
+          SnackBar(
+            content: Text(
+              'Error (${e.code}): ${e.message ?? 'Fallo al iniciar sesión.'}',
+            ),
+          ),
         );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       } finally {
         if (mounted) {
           setState(() {
@@ -98,7 +105,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // Email Field
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Correo Electrónico'),
+                  decoration: const InputDecoration(
+                    labelText: 'Correo Electrónico',
+                  ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -115,8 +124,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Contraseña'),
-                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: !_isPasswordVisible,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Por favor, ingresa tu contraseña';
@@ -135,7 +158,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: TextButton(
                     onPressed: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordScreen(),
+                        ),
                       );
                     },
                     child: const Text('¿Olvidaste tu contraseña?'),
@@ -146,16 +171,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // Login Button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _login,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Iniciar Sesión'),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Text('Iniciar Sesión'),
                 ),
                 const SizedBox(height: 24),
 
@@ -163,14 +189,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      '¿No tienes una cuenta?',
-                      style: textTheme.bodyMedium,
-                    ),
+                    Text('¿No tienes una cuenta?', style: textTheme.bodyMedium),
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const SignUpScreen(),
+                          ),
                         );
                       },
                       child: const Text('Regístrate'),
@@ -184,4 +209,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
-} 
+}
