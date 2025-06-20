@@ -59,6 +59,39 @@
 - [ ] Implement notifications system
 - [ ] Create user activity feed
 
+## Module 4: Homepage Development
+
+### Phase 1: Welcome Section
+- [ ] Create a `Row` layout for the welcome section.
+- [ ] Add `SafeArea` to avoid system UI overlap.
+- [ ] Add the TUMex logo to the left.
+- [ ] Add a "Bienvenido Dr. [last_name]" text widget.
+- [ ] Fetch the user's last name and display it.
+
+### Phase 2: Services Section
+- [ ] Create the main container for the services.
+- [ ] Create the large "Paquetes para Cirugías" card.
+    - [ ] Add the background image.
+    - [ ] Add the text overlay.
+    - [ ] Implement navigation to the surgery packages flow.
+- [ ] Create the combined "Renta de equipo y Venta de insumos" card.
+    - [ ] Add the background image.
+    - [ ] Add the text overlay.
+    - [ ] Implement navigation.
+
+### Phase 3: Open Orders Section
+- [ ] Create a horizontal scroll view for open orders.
+- [ ] For each open order card:
+    - [ ] Display Order Number, Status, and Arrival Time.
+    - [ ] Add the Lottie animation for the package.
+    - [ ] Add a "Ver Orden" button.
+    - [ ] Implement navigation to the order details screen.
+
+### Phase 4: Navigation Bar
+- [ ] Implement the bottom navigation bar.
+- [ ] Create icons for Home, Notifications, Order History, and User Profile.
+- [ ] Set up routing for each navigation item.
+
 ## Current Status
 ✅ **Authentication Module Complete**: All login, signup, and password recovery features are working
 🔄 **Profile Module In Progress**: Initial UI for the profile screen is created

@@ -33,8 +33,9 @@ migrate_working_dir/
 .pub/
 /build/
 
-# Firebase configuration (contains sensitive API keys)
-lib/firebase_options.dart
+# Firebase configuration
+# We keep firebase_options.dart as it's required for project setup and contains no secrets.
+# We explicitly untrack google-services.json instead.
 /android/app/google-services.json
 
 # Symbolication related

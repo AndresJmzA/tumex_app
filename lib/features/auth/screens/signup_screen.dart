@@ -13,6 +13,7 @@ class SignUpScreen extends ConsumerStatefulWidget {
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -23,6 +24,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -35,10 +37,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         _isLoading = true;
       });
       try {
-        await ref
-            .read(authServiceProvider)
-            .createUserWithEmailAndPassword(
+        await ref.read(authServiceProvider).createUserWithEmailAndPassword(
               fullName: _nameController.text.trim(),
+              lastName: _lastNameController.text.trim(),
               email: _emailController.text.trim(),
               password: _passwordController.text.trim(),
             );
@@ -97,16 +98,32 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Full Name Field
+                // Name Field
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Nombre Completo',
+                    labelText: 'Nombre(s)',
                   ),
                   keyboardType: TextInputType.name,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Por favor, ingresa tu nombre';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Last Name Field
+                TextFormField(
+                  controller: _lastNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Apellido(s)',
+                  ),
+                  keyboardType: TextInputType.name,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, ingresa tus apellidos';
                     }
                     return null;
                   },
@@ -198,17 +215,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 // Sign Up Button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signUp,
-                  child:
-                      _isLoading
-                          ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                          : const Text('Crear Cuenta'),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Crear Cuenta'),
                 ),
                 const SizedBox(height: 24),
 

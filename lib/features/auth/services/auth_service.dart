@@ -51,6 +51,7 @@ class AuthenticationService {
     required String email,
     required String password,
     required String fullName,
+    required String lastName,
   }) async {
     final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
       email: email,
@@ -73,12 +74,12 @@ class AuthenticationService {
         'edited_time': FieldValue.serverTimestamp(),
         'photo_url': null,
         'phone_number': null,
-        'last_name': null,
+        'last_name': lastName,
         'doctor_id_card': null,
         'speciallity': null,
       };
 
-      await _firestore.collection('users').doc(newUser.uid).set(userData);
+      await _firestore.collection('Usuarios').doc(newUser.uid).set(userData);
     }
 
     return userCredential;

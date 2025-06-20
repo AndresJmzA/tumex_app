@@ -18,7 +18,7 @@ class ProfileService {
 
   ProfileService(this._firestore);
 
-  CollectionReference get _usersCollection => _firestore.collection('users');
+  CollectionReference get _usersCollection => _firestore.collection('Usuarios');
 
   // Get a stream of user data
   Stream<UserModel?> getUserStream(String uid) {

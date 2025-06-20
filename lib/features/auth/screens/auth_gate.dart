@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tumex_users_app/features/auth/screens/error_screen.dart';
 import 'package:tumex_users_app/features/auth/screens/login_screen.dart';
 import 'package:tumex_users_app/features/auth/services/auth_service.dart';
-import 'package:tumex_users_app/features/home/screens/home_screen.dart';
+import 'package:tumex_users_app/features/navigation/screens/main_scaffold.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -16,7 +16,7 @@ class AuthGate extends ConsumerWidget {
     return authState.when(
       data: (user) {
         if (user != null) {
-          return const HomeScreen();
+          return const MainScaffold();
         }
         return const LoginScreen();
       },
@@ -35,4 +35,4 @@ class AuthGate extends ConsumerWidget {
       },
     );
   }
-} 
+}

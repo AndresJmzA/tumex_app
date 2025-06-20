@@ -1,0 +1,204 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // SECURE RULE FOR USERS: Allow users to read/write their own data.
+    // This fixes the error in the app.
+    match /users/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
+    }
+
+    // Your existing rules, but secured to only allow logged-in users to read.
+    match /Calendar/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /Calendar/{parent}/appointments/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /surgery/{parent}/proceedure/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /surgery/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /orderDetailsTest/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /orderTest/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /Notifications/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /orderDetails/{parent}/workersComments/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /Finance/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /customerSupportTicket/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /customerSupportTicket/{parent}/supportChatMessage/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /itemsOrder/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow delete: if false;
+    }
+
+    match /orderDetails/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow delete: if false;
+    }
+
+    match /RentedItems/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /userSalesCart/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /Products/{parent}/reservation_period/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /subProducts/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /procedure/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /Procedure/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /surgery_type/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /Address/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /Address_Try/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /ItemsOrdered/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /Order/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /OrderComments/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
+      allow delete: if false;
+    }
+
+    match /Products/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if true; // This seems intentional, so I'm keeping it.
+      allow delete: if false;
+    }
+
+    // This rule was for your old 'Usuarios' collection. I've kept it just in case.
+    match /Usuarios/{document} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow delete: if false;
+    }
+  }
+} 

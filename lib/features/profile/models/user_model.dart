@@ -43,8 +43,8 @@ class UserModel {
       lastName: data['last_name'],
       phoneNumber: data['phone_number'],
       photoUrl: data['photo_url'],
-      doctorIdCard: data['doctor_id_card'],
-      speciality: data['speciallity'], // Note: 'speciallity' in image
+      doctorIdCard: data['doctor_id_card']?.toString(),
+      speciality: data['speciallity'],
     );
   }
 

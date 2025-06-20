@@ -23,17 +23,37 @@ class AppTheme {
       brightness: Brightness.light,
     ),
     textTheme: TextTheme(
-      displayLarge: GoogleFonts.raleway(fontSize: 96, fontWeight: FontWeight.w300, letterSpacing: -1.5),
-      displayMedium: GoogleFonts.raleway(fontSize: 60, fontWeight: FontWeight.w300, letterSpacing: -0.5),
-      displaySmall: GoogleFonts.raleway(fontSize: 48, fontWeight: FontWeight.w400),
-      headlineMedium: GoogleFonts.raleway(fontSize: 34, fontWeight: FontWeight.w600, letterSpacing: 0.25),
-      headlineSmall: GoogleFonts.raleway(fontSize: 24, fontWeight: FontWeight.w600), // For titles
-      titleLarge: GoogleFonts.raleway(fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: 0.15),
-      bodyLarge: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w400, letterSpacing: 0.5), // Body text
-      bodyMedium: GoogleFonts.roboto(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.25), // Secondary labels
-      labelLarge: GoogleFonts.raleway(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1.25), // Buttons
-      bodySmall: GoogleFonts.roboto(fontSize: 12, fontWeight: FontWeight.w400, letterSpacing: 0.4),
-      labelSmall: GoogleFonts.roboto(fontSize: 10, fontWeight: FontWeight.w400, letterSpacing: 1.5),
+      displayLarge: GoogleFonts.raleway(
+          fontSize: 96, fontWeight: FontWeight.w300, letterSpacing: -1.5),
+      displayMedium: GoogleFonts.raleway(
+          fontSize: 60, fontWeight: FontWeight.w300, letterSpacing: -0.5),
+      displaySmall:
+          GoogleFonts.raleway(fontSize: 48, fontWeight: FontWeight.w400),
+      headlineMedium: GoogleFonts.raleway(
+          fontSize: 34, fontWeight: FontWeight.w600, letterSpacing: 0.25),
+      headlineSmall: GoogleFonts.raleway(
+          fontSize: 24,
+          fontWeight: FontWeight.w500), // Guide: 24px, Medium (w500)
+      titleLarge: GoogleFonts.raleway(
+          fontSize: 22,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.15), // Guide: 22px, Medium (w500)
+      bodyLarge: GoogleFonts.roboto(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0.5), // Body text
+      bodyMedium: GoogleFonts.roboto(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0.25), // Guide: 14px, Normal (w400)
+      labelLarge: GoogleFonts.raleway(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.25), // Buttons
+      bodySmall: GoogleFonts.roboto(
+          fontSize: 12, fontWeight: FontWeight.w400, letterSpacing: 0.4),
+      labelSmall: GoogleFonts.roboto(
+          fontSize: 10, fontWeight: FontWeight.w400, letterSpacing: 1.5),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -82,4 +102,4 @@ class AppTheme {
       ),
     ),
   );
-} 
+}
