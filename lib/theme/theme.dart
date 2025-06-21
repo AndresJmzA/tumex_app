@@ -101,5 +101,39 @@ class AppTheme {
         borderRadius: BorderRadius.circular(18.0),
       ),
     ),
+    // --- NEW: Custom Theme for Time and Date Pickers ---
+    timePickerTheme: TimePickerThemeData(
+      backgroundColor: Colors.white,
+      hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? Colors.white
+              : Colors.black54),
+      hourMinuteColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? Colors.blue.shade600
+              : Colors.grey.shade200),
+      dayPeriodTextColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? Colors.white
+              : Colors.black),
+      dayPeriodColor: MaterialStateColor.resolveWith((states) =>
+          states.contains(MaterialState.selected)
+              ? Colors.blue.shade600
+              : Colors.grey.shade200),
+      dialHandColor: Colors.blue.shade600,
+      dialBackgroundColor: Colors.grey.shade200,
+      hourMinuteShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      dayPeriodShape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+    datePickerTheme: DatePickerThemeData(
+      backgroundColor: Colors.white,
+      headerBackgroundColor: Colors.blue.shade600,
+      headerForegroundColor: Colors.white,
+    ),
+    useMaterial3: true,
   );
 }

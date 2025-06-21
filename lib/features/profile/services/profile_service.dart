@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tumex_users_app/features/profile/models/user_model.dart';
+import 'package:tumex_users_app/features/profile/models/address_model.dart';
 
 final profileServiceProvider = Provider((ref) {
   return ProfileService(FirebaseFirestore.instance);
@@ -49,5 +50,16 @@ class ProfileService {
   // Set user data (used for creating new user documents)
   Future<void> setUserData(String uid, Map<String, dynamic> data) async {
     await _usersCollection.doc(uid).set(data, SetOptions(merge: true));
+  }
+
+  // --- NEW: Fetch user addresses ---
+  Stream<List<Address>> getUserAddresses(String userId) {
+    return _firestore
+        .collection('Usuarios')
+        .doc(userId)
+        .collection('Addresses')
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Address.fromSnapshot(doc)).toList());
   }
 }

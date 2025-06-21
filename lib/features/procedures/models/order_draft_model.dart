@@ -29,14 +29,24 @@ class OrderDraft {
       allTemplateItems; // Holds all possible items for the UI
   final DocumentReference selectedProcedurePackageRef;
   final DateTime? rentalDate;
-  // final CoverageType? typeOfCoverage; // Placeholder for now
+  final DateTime? surgeryDate;
+  final String? surgeryTime;
+  final String? typeOfCoverage;
+  final String? surgeryAddress;
+  final String? patientName;
+  final String? notes;
 
   OrderDraft({
     required this.cartItems,
     required this.selectedProcedurePackageRef,
     required this.allTemplateItems,
     this.rentalDate,
-    // this.typeOfCoverage,
+    this.surgeryDate,
+    this.surgeryTime,
+    this.typeOfCoverage,
+    this.surgeryAddress,
+    this.patientName,
+    this.notes,
   });
 
   OrderDraft copyWith({
@@ -44,6 +54,12 @@ class OrderDraft {
     DocumentReference? selectedProcedurePackageRef,
     List<ItemInCart>? allTemplateItems,
     DateTime? rentalDate,
+    DateTime? surgeryDate,
+    String? surgeryTime,
+    String? typeOfCoverage,
+    String? surgeryAddress,
+    String? patientName,
+    String? notes,
   }) {
     return OrderDraft(
       cartItems: cartItems ?? this.cartItems,
@@ -51,6 +67,12 @@ class OrderDraft {
           selectedProcedurePackageRef ?? this.selectedProcedurePackageRef,
       allTemplateItems: allTemplateItems ?? this.allTemplateItems,
       rentalDate: rentalDate ?? this.rentalDate,
+      surgeryDate: surgeryDate ?? this.surgeryDate,
+      surgeryTime: surgeryTime ?? this.surgeryTime,
+      typeOfCoverage: typeOfCoverage ?? this.typeOfCoverage,
+      surgeryAddress: surgeryAddress ?? this.surgeryAddress,
+      patientName: patientName ?? this.patientName,
+      notes: notes ?? this.notes,
     );
   }
 }

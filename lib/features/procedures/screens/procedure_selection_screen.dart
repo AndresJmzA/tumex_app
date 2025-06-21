@@ -7,6 +7,60 @@ import 'package:tumex_users_app/features/procedures/providers/order_draft_provid
 import 'package:tumex_users_app/features/procedures/services/procedure_service.dart';
 import 'package:tumex_users_app/features/products/providers/product_provider.dart';
 import 'package:tumex_users_app/features/procedures/screens/add_items_screen.dart';
+import 'package:tumex_users_app/features/procedures/screens/surgery_details_screen.dart';
+
+// --- NEW: Providers for memoized data processing ---
+
+/// Provider that takes the raw draft and transforms it into a data structure
+/// suitable for the UI, grouped by category.
+final categorizedItemsProvider = Provider<Map<String, List<dynamic>>>((ref) {
+  final draft = ref.watch(orderDraftProvider);
+
+  if (draft == null) {
+    return {};
+  }
+
+  final uiElements = <dynamic>[];
+  final processedChoiceGroupIds = <int>{};
+
+  for (final cartItem in draft.cartItems) {
+    if (cartItem.choiceGroup != null) {
+      final groupId = cartItem.choiceGroup!;
+      if (!processedChoiceGroupIds.contains(groupId)) {
+        final groupOptions = draft.allTemplateItems
+            .where((item) => item.choiceGroup == groupId)
+            .toList();
+        uiElements.add(groupOptions);
+        processedChoiceGroupIds.add(groupId);
+      }
+    } else {
+      uiElements.add(cartItem);
+    }
+  }
+
+  final Map<String, List<dynamic>> categorizedItems = {};
+  for (final element in uiElements) {
+    final category = (element is List<ItemInCart>)
+        ? element.first.category
+        : (element as ItemInCart).category;
+    categorizedItems
+        .putIfAbsent(category ?? 'Sin categoría', () => [])
+        .add(element);
+  }
+  return categorizedItems;
+});
+
+/// Provider that sorts the category keys, ensuring 'equipo' is first.
+final sortedCategoriesProvider = Provider<List<String>>((ref) {
+  final categorizedItems = ref.watch(categorizedItemsProvider);
+  final sortedKeys = categorizedItems.keys.toList();
+  sortedKeys.sort((a, b) {
+    if (a.toLowerCase() == 'equipo') return -1;
+    if (b.toLowerCase() == 'equipo') return 1;
+    return a.compareTo(b);
+  });
+  return sortedKeys;
+});
 
 class ProcedureSelectionScreen extends ConsumerStatefulWidget {
   const ProcedureSelectionScreen({super.key});
@@ -23,209 +77,168 @@ class _ProcedureSelectionScreenState
   @override
   Widget build(BuildContext context) {
     final draft = ref.watch(orderDraftProvider);
+    final categorizedItems = ref.watch(categorizedItemsProvider);
+    final sortedCategories = ref.watch(sortedCategoriesProvider);
 
-    if (draft != null) {
-      final uiElements = <dynamic>[];
-      final processedChoiceGroupIds = <int>{};
-
-      // Process all items in the cart to build the UI list
-      for (final cartItem in draft.cartItems) {
-        if (cartItem.choiceGroup != null) {
-          final groupId = cartItem.choiceGroup!;
-          if (!processedChoiceGroupIds.contains(groupId)) {
-            // Find all options for this group from the master template list
-            final groupOptions = draft.allTemplateItems
-                .where((item) => item.choiceGroup == groupId)
-                .toList();
-            uiElements.add(groupOptions);
-            processedChoiceGroupIds.add(groupId);
-          }
-        } else {
-          // It's a single item, just add it to the list
-          uiElements.add(cartItem);
-        }
-      }
-
-      // Now group the UI elements by category
-      final Map<String, List<dynamic>> categorizedItemsForUI = {};
-      for (final element in uiElements) {
-        final category = (element is List<ItemInCart>)
-            ? element.first.category
-            : (element as ItemInCart).category;
-        categorizedItemsForUI
-            .putIfAbsent(category ?? 'Sin categoría', () => [])
-            .add(element);
-      }
-
-      final sortedCategories = categorizedItemsForUI.keys.toList();
-      sortedCategories.sort((a, b) {
-        if (a.toLowerCase() == 'equipo') return -1;
-        if (b.toLowerCase() == 'equipo') return 1;
-        return a.compareTo(b);
-      });
-
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Solicitar Paquete'),
-          centerTitle: true,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Elige la cirugía y procedimiento a realizar',
-                          style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 24),
-                      DropdownSearch<DocumentSnapshot>(
-                        asyncItems: (String filter) =>
-                            ref.read(procedureServiceProvider).getSurgeries(),
-                        itemAsString: (DocumentSnapshot doc) =>
-                            doc['surgeryName'] as String,
-                        onChanged: (DocumentSnapshot? data) {
-                          setState(() => _selectedSurgeryRef = data?.reference);
-                          ref.read(orderDraftProvider.notifier).clearDraft();
-                        },
-                        dropdownDecoratorProps: const DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                              labelText: "Tipo de cirugía",
-                              hintText: "Selecciona la cirugía"),
-                        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Solicitar Paquete'),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Elige la cirugía y procedimiento a realizar',
+                        style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 24),
+                    DropdownSearch<DocumentSnapshot>(
+                      asyncItems: (String filter) =>
+                          ref.read(procedureServiceProvider).getSurgeries(),
+                      itemAsString: (DocumentSnapshot doc) =>
+                          doc['surgeryName'] as String,
+                      onChanged: (DocumentSnapshot? data) {
+                        setState(() => _selectedSurgeryRef = data?.reference);
+                        ref.read(orderDraftProvider.notifier).clearDraft();
+                      },
+                      dropdownDecoratorProps: const DropDownDecoratorProps(
+                        dropdownSearchDecoration: InputDecoration(
+                            labelText: "Tipo de cirugía",
+                            hintText: "Selecciona la cirugía"),
                       ),
-                      const SizedBox(height: 16),
-                      DropdownSearch<DocumentSnapshot>(
-                        asyncItems: (String filter) async {
-                          if (_selectedSurgeryRef == null) return [];
-                          return ref
-                              .read(procedureServiceProvider)
-                              .getProceduresForSurgery(_selectedSurgeryRef!);
-                        },
-                        itemAsString: (DocumentSnapshot doc) =>
-                            doc['procedureName'] as String,
-                        onChanged: (DocumentSnapshot? data) {
-                          if (data == null) return;
-                          _loadTemplateItems(data.reference);
-                        },
-                        enabled: _selectedSurgeryRef != null,
-                        popupProps: PopupProps.menu(
-                            constraints: const BoxConstraints(maxHeight: 224)),
-                        dropdownDecoratorProps: const DropDownDecoratorProps(
-                          dropdownSearchDecoration: InputDecoration(
-                              labelText: "Tipo de procedimiento",
-                              hintText: "Selecciona el procedimiento"),
-                        ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownSearch<DocumentSnapshot>(
+                      asyncItems: (String filter) async {
+                        if (_selectedSurgeryRef == null) return [];
+                        return ref
+                            .read(procedureServiceProvider)
+                            .getProceduresForSurgery(_selectedSurgeryRef!);
+                      },
+                      itemAsString: (DocumentSnapshot doc) =>
+                          doc['procedureName'] as String,
+                      onChanged: (DocumentSnapshot? data) {
+                        if (data == null) return;
+                        _loadTemplateItems(data.reference);
+                      },
+                      enabled: _selectedSurgeryRef != null,
+                      popupProps: PopupProps.menu(
+                          constraints: const BoxConstraints(maxHeight: 224)),
+                      dropdownDecoratorProps: const DropDownDecoratorProps(
+                        dropdownSearchDecoration: InputDecoration(
+                            labelText: "Tipo de procedimiento",
+                            hintText: "Selecciona el procedimiento"),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-              if (draft != null)
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: sortedCategories.length,
-                  itemBuilder: (context, index) {
-                    final category = sortedCategories[index];
-                    final items = categorizedItemsForUI[category]!;
-                    final formattedCategory = category.isNotEmpty
-                        ? category[0].toUpperCase() + category.substring(1)
-                        : '';
+            ),
+            const SizedBox(height: 24),
+            if (draft != null)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: sortedCategories.length,
+                itemBuilder: (context, index) {
+                  final category = sortedCategories[index];
+                  final items = categorizedItems[category]!;
+                  final formattedCategory = category.isNotEmpty
+                      ? category[0].toUpperCase() + category.substring(1)
+                      : '';
 
-                    return ExpansionTile(
-                      title: Row(
-                        children: [
-                          Text(formattedCategory,
-                              style: Theme.of(context).textTheme.titleLarge),
-                          const SizedBox(width: 16),
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: Theme.of(context).primaryColor,
-                            child: Text(
-                              items.length.toString(),
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold),
-                            ),
+                  return ExpansionTile(
+                    title: Row(
+                      children: [
+                        Text(formattedCategory,
+                            style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(width: 16),
+                        CircleAvatar(
+                          radius: 12,
+                          backgroundColor: Theme.of(context).primaryColor,
+                          child: Text(
+                            items.length.toString(),
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold),
                           ),
-                        ],
-                      ),
-                      initiallyExpanded: true,
-                      children: items.map<Widget>((item) {
-                        if (item is List<ItemInCart>) {
-                          return _ChoiceGroupCard(options: item);
-                        } else if (item is ItemInCart) {
-                          final itemFromCart = draft.cartItems.firstWhere(
-                              (ci) => ci.itemID == item.itemID,
-                              orElse: () => item);
-                          return _ItemCard(item: itemFromCart);
-                        }
-                        return const SizedBox.shrink();
-                      }).toList(),
+                        ),
+                      ],
+                    ),
+                    initiallyExpanded: false,
+                    children: items.map<Widget>((item) {
+                      if (item is List<ItemInCart>) {
+                        return _ChoiceGroupCard(options: item);
+                      } else if (item is ItemInCart) {
+                        return _ItemCard(item: item);
+                      }
+                      return const SizedBox.shrink();
+                    }).toList(),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: (draft?.cartItems.isNotEmpty ?? false)
+          ? Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Confirmación'),
+                          content: const Text(
+                              '¿Estás seguro de que deseas continuar con esta selección?'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Cancelar',
+                                  style: TextStyle(color: Colors.red)),
+                              onPressed: () {
+                                Navigator.of(context)
+                                    .pop(); // Dismiss the dialog
+                              },
+                            ),
+                            ElevatedButton(
+                              child: const Text('Aceptar'),
+                              onPressed: () {
+                                Navigator.of(context)
+                                    .pop(); // Dismiss the dialog
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const SurgeryDetailsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
-                ),
-            ],
-          ),
-        ),
-        bottomNavigationBar: (draft?.cartItems.isNotEmpty ?? false)
-            ? Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Confirmación'),
-                            content: const Text(
-                                '¿Estás seguro de que deseas continuar con esta selección?'),
-                            actions: <Widget>[
-                              TextButton(
-                                child: const Text('Cancelar',
-                                    style: TextStyle(color: Colors.red)),
-                                onPressed: () {
-                                  Navigator.of(context)
-                                      .pop(); // Dismiss the dialog
-                                },
-                              ),
-                              ElevatedButton(
-                                // Changed from OutlinedButton
-                                child: const Text('Aceptar'),
-                                // The ElevatedButton will use the default primary color from the theme.
-                                onPressed: () {
-                                  Navigator.of(context)
-                                      .pop(); // Dismiss the dialog
-                                  // TODO: Navigate to the next screen (Phase 3: Surgery Details)
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: const Text('Siguiente')),
-              )
-            : null,
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => const AddItemsScreen()));
-          },
-          child: const Icon(Icons.add),
-        ),
-      );
-    }
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+                  child: const Text('Siguiente')),
+            )
+          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const AddItemsScreen()));
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 

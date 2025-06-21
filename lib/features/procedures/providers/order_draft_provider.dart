@@ -84,6 +84,38 @@ class OrderDraftNotifier extends StateNotifier<OrderDraft?> {
     );
   }
 
+  // --- NEW: Methods to update surgery details ---
+
+  void updateSurgeryDate(DateTime date) {
+    if (state == null) return;
+    state = state!.copyWith(surgeryDate: date);
+  }
+
+  void updateSurgeryTime(String time) {
+    if (state == null) return;
+    state = state!.copyWith(surgeryTime: time);
+  }
+
+  void updateTypeOfCoverage(String coverage) {
+    if (state == null) return;
+    state = state!.copyWith(typeOfCoverage: coverage);
+  }
+
+  void updateSurgeryAddress(String address) {
+    if (state == null) return;
+    state = state!.copyWith(surgeryAddress: address);
+  }
+
+  void updatePatientName(String name) {
+    if (state == null) return;
+    state = state!.copyWith(patientName: name);
+  }
+
+  void updateNotes(String notes) {
+    if (state == null) return;
+    state = state!.copyWith(notes: notes);
+  }
+
   // Clears the entire draft
   void clearDraft() {
     state = null;
