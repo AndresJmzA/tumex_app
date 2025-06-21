@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tumex_users_app/features/auth/services/auth_service.dart';
 import 'package:tumex_users_app/features/profile/services/profile_service.dart';
+import 'package:tumex_users_app/features/procedures/screens/procedure_selection_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -107,7 +108,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   title: 'Paquetes para Cirugías',
                   imagePath: 'assets/images/surgery_package.png',
                   height: 180,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ProcedureSelectionScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 16),
                 _ServiceCard(
@@ -247,12 +254,25 @@ class _ServiceCard extends StatelessWidget {
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                // Placeholder in case of image loading error
+                // Placeholder with gradient background in case of image loading error
                 return Container(
                   height: height,
-                  color: Colors.grey[300],
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.blue.shade300,
+                        Colors.purple.shade300,
+                      ],
+                    ),
+                  ),
                   child: const Center(
-                    child: Icon(Icons.image_not_supported, color: Colors.grey),
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                   ),
                 );
               },

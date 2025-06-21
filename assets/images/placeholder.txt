@@ -1,0 +1,7 @@
+# Placeholder for missing images
+
+The following images are referenced in the code but missing:
+- surgery_package.png
+- rent_sell_equipment.png
+
+These should be added to this directory for the app to work properly. 

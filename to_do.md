@@ -48,8 +48,8 @@
 ## Module 3: Core App Features
 
 ### Phase 1: Navigation & Structure
-- [ ] Implement bottom navigation bar
-- [ ] Create main app scaffold with proper navigation
+- [x] Implement bottom navigation bar
+- [x] Create main app scaffold with proper navigation
 - [ ] Set up route management
 - [ ] Add proper app icons and branding
 
@@ -59,40 +59,87 @@
 - [ ] Implement notifications system
 - [ ] Create user activity feed
 
-## Module 4: Homepage Development
+## Module 4: Homepage Development ✅ COMPLETED
 
-### Phase 1: Welcome Section
-- [ ] Create a `Row` layout for the welcome section.
-- [ ] Add `SafeArea` to avoid system UI overlap.
-- [ ] Add the TUMex logo to the left.
-- [ ] Add a "Bienvenido Dr. [last_name]" text widget.
-- [ ] Fetch the user's last name and display it.
+### Phase 1: Welcome Section ✅
+- [x] Create a `Row` layout for the welcome section.
+- [x] Add `SafeArea` to avoid system UI overlap.
+- [x] Add the TUMex logo to the left.
+- [x] Add a "Bienvenido Dr. [last_name]" text widget.
+- [x] Fetch the user's last name and display it.
 
-### Phase 2: Services Section
-- [ ] Create the main container for the services.
-- [ ] Create the large "Paquetes para Cirugías" card.
-    - [ ] Add the background image.
-    - [ ] Add the text overlay.
+### Phase 2: Services Section ✅
+- [x] Create the main container for the services.
+- [x] Create the large "Paquetes para Cirugías" card.
+    - [x] Add the background image.
+    - [x] Add the text overlay.
     - [ ] Implement navigation to the surgery packages flow.
-- [ ] Create the combined "Renta de equipo y Venta de insumos" card.
-    - [ ] Add the background image.
-    - [ ] Add the text overlay.
+- [x] Create the combined "Renta de equipo y Venta de insumos" card.
+    - [x] Add the background image.
+    - [x] Add the text overlay.
     - [ ] Implement navigation.
 
-### Phase 3: Open Orders Section
-- [ ] Create a horizontal scroll view for open orders.
-- [ ] For each open order card:
-    - [ ] Display Order Number, Status, and Arrival Time.
-    - [ ] Add the Lottie animation for the package.
-    - [ ] Add a "Ver Orden" button.
+### Phase 3: Open Orders Section ✅
+- [x] Create a PageView for open orders.
+- [x] For each open order card:
+    - [x] Display Order Number, Status, and Arrival Time.
+    - [x] Add the Lottie animation for the package.
+    - [x] Add a "Ver Orden" button.
     - [ ] Implement navigation to the order details screen.
+- [x] Handle empty state for open orders.
 
-### Phase 4: Navigation Bar
-- [ ] Implement the bottom navigation bar.
-- [ ] Create icons for Home, Notifications, Order History, and User Profile.
-- [ ] Set up routing for each navigation item.
+### Phase 4: Navigation Bar ✅
+- [x] Implement the bottom navigation bar.
+- [x] Create icons for Home, Notifications, Order History, and User Profile.
+- [x] Set up routing for each navigation item.
 
 ## Current Status
 ✅ **Authentication Module Complete**: All login, signup, and password recovery features are working
 🔄 **Profile Module In Progress**: Initial UI for the profile screen is created
 🔄 **Next Step**: Integrate Firestore for complete user data management as per the new plan
+
+## Module 5: Surgery Package Request Flow ✅ COMPLETED
+
+### Phase 0: State Management & Persistence Setup ✅
+- [x] Choose and implement a local persistence library (e.g., Hive, SharedPreferences).
+- [x] Create a Riverpod provider (e.g., `StateNotifierProvider`) to manage the temporary order state.
+- [x] Implement logic to save the order state to local storage on every change and load it on flow entry.
+
+### Phase 1: Procedure Selection (UI Refined) ✅
+- [x] Create the main screen `procedure_selection_screen.dart`.
+    - [x] Include an `AppBar` with a title and back button.
+- [x] Implement a grouped list UI (e.g., `ExpansionTile`) to show `Surgeries` as headers and `Procedures` as items.
+- [x] Add a search bar to filter surgeries and procedures in real-time.
+- [x] On selecting a procedure, load `templateItems` into the persistent state provider and navigate to the next phase.
+
+### Phase 2: Package Customization ✅
+- [x] Create the `package_customization_screen.dart`.
+- [x] Read the order data from the persistent state provider.
+- [x] Use a `TabBar` or `SegmentedButton` to divide content into "Equipment," "Instruments," and "Consumables."
+- [x] Allow the user to modify items, with each change updating the state provider (which then persists automatically).
+    - [x] Modify quantity.
+    - [x] Remove items from the list.
+    - [x] Add new items from a catalog.
+- [x] Add a floating or fixed button at the bottom to "Continue."
+
+### Phase 3: Surgery Details (Logistics)
+- [ ] Create the `surgery_details_screen.dart`.
+- [ ] Add fields for surgery details (date, time, coverage, address, notes).
+- [ ] On change, update the corresponding fields in the order object within the state provider.
+
+### Phase 4: Summary and Submission
+- [ ] Create the `request_summary_screen.dart`.
+- [ ] Display a complete summary by reading the final state from the provider.
+- [ ] Upon submission:
+    - [ ] Show a loading indicator.
+    - [ ] Read the state from the provider and create the final request document in Firestore.
+    - [ ] On completion, clear the persisted local state.
+    - [ ] Show a confirmation screen (`request_sent_screen.dart`) and navigate the user back to the Homepage.
+
+### Additional Features Implemented ✅
+- [x] Product catalog with category grouping
+- [x] Product model and provider for efficient data fetching
+- [x] Item quantity modification with automatic removal when quantity reaches zero
+- [x] Floating action button to add products from catalog
+- [x] Visual feedback with snackbars when items are added
+- [x] Product images and error handling for missing images
